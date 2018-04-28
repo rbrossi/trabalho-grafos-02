@@ -1,21 +1,20 @@
 package parte1;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 public class BuscaDFS {
-
+/*
 	static 
 
 	// Recursive DFS
 	public void dfs(Node node) {
 		System.out.print(node.data + " ");
 		List<Node> neighbours = node.getNeighbours();
-		node.visited = true;
+		node.color = true;
 		for (int i = 0; i < neighbours.size(); i++) {
 			Node n = neighbours.get(i);
-			if (n != null && !n.visited) {
+			if (n != null && !n.color) {
 				dfs(n);
 			}
 		}
@@ -25,7 +24,7 @@ public class BuscaDFS {
 	public void dfsUsingStack(Node node) {
 		Stack<Node> stack = new Stack<Node>();
 		stack.add(node);
-		node.visited = true;
+		node.color = true;
 		while (!stack.isEmpty()) {
 			Node element = stack.pop();
 			System.out.print(element.data + " ");
@@ -33,14 +32,14 @@ public class BuscaDFS {
 			List<Node> neighbours = element.getNeighbours();
 			for (int i = 0; i < neighbours.size(); i++) {
 				Node n = neighbours.get(i);
-				if (n != null && !n.visited) {
+				if (n != null && !n.color) {
 					stack.add(n);
-					n.visited = true;
+					n.color = true;
 
 				}
 			}
 		}
 	}
-
+*/
 	
 }
