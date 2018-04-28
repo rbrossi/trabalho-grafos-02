@@ -36,11 +36,11 @@ public class GraphList implements Graph {
 			BufferedReader buffReader = new BufferedReader(reader);
 
 			String linha = buffReader.readLine();
-			int vertexCount = Integer.parseInt(linha);
-			// matrix = new int[vertexCount][vertexCount];
+			int iteration = 0;
 
 			linha = buffReader.readLine();
 			while (linha != null) {
+				System.out.println(iteration++);
 				String[] edgeNodes = linha.split(" ");
 
 				int vertex1 = Integer.parseInt(edgeNodes[0]);
@@ -161,7 +161,7 @@ public class GraphList implements Graph {
 			System.out.print(txt);
 			b.append(txt);
 		});
-		
+
 		printToFile(b.toString(), fileName);
 	}
 
