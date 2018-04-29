@@ -29,6 +29,7 @@ public class GraphList implements Graph {
 		this.fileNameOut = fileNameOut;
 		System.out.println("Done creating graph...");
 	}
+	
 
 	private void createFromFile(String fileName) {
 		try {
@@ -66,6 +67,7 @@ public class GraphList implements Graph {
 				// matrix[getIndex(nodes, node1)][getIndex(nodes, node2)]++;
 				edgeCount++;
 				linha = buffReader.readLine();
+
 			}
 
 		} catch (FileNotFoundException e) {
