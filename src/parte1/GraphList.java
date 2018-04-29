@@ -1,37 +1,35 @@
 package parte1;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
-public class GraphList implements Graph {
+public class GraphList extends Graph {
 	private MySet<Node> nodes;
-	private int edgeCount;
 	private int time;
-	private Queue<Node> q;
-	private String fileNameOut;
 
 	public GraphList(String fileNameIn, String fileNameOut) {
-		System.out.println("Creating graph...");
+		super(fileNameIn, fileNameOut);
+	}
+
+	@Override
+	void init() {
 		edgeCount = 0;
 		time = 0;
-
 		nodes = new MySet<Node>();
-		createFromFile(fileNameIn);
-		this.fileNameOut = fileNameOut;
-		System.out.println("Done creating graph...");
 	}
-	
 
-	private void createFromFile(String fileName) {
+	@Override
+	void createFromFile(String fileName) {
 		try {
 			FileReader reader = new FileReader(fileName);
 			BufferedReader buffReader = new BufferedReader(reader);
@@ -47,13 +45,13 @@ public class GraphList implements Graph {
 				int vertex1 = Integer.parseInt(edgeNodes[0]);
 				int vertex2 = Integer.parseInt(edgeNodes[1]);
 
-				Node node1 = new Node(Integer.parseInt(edgeNodes[0]));
+				Node node1 = new Node(vertex1);
 				Node node2 = null;
 				node1 = nodes.addNode(node1);
 				node1.degree++;
 
 				if (vertex1 != vertex2) {
-					node2 = new Node(Integer.parseInt(edgeNodes[1]));
+					node2 = new Node(vertex2);
 					node2 = nodes.addNode(node2);
 					node1.addNeighbour(node2);
 					node2.addNeighbour(node1);
@@ -67,9 +65,9 @@ public class GraphList implements Graph {
 				// matrix[getIndex(nodes, node1)][getIndex(nodes, node2)]++;
 				edgeCount++;
 				linha = buffReader.readLine();
-
 			}
-
+			buffReader.close();
+			reader.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("It was not possible to find the file: " + e.getMessage());
 		} catch (IOException e) {
@@ -77,7 +75,6 @@ public class GraphList implements Graph {
 		} catch (Exception e) {
 			System.out.println("Something went wrong: " + e.getMessage());
 		}
-
 	}
 
 	@Override
@@ -107,30 +104,13 @@ public class GraphList implements Graph {
 		return nodes.size();
 	}
 
-	@Override
-	public int getEdgesCount() {
-		return edgeCount;
-	}
-
-	private static int getIndex(Set<? extends Object> set, Object value) {
-		int result = 0;
-		for (Object entry : set) {
-			if (entry.equals(value))
-				return result;
-			result++;
-		}
-		return -1;
-	}
-
-	@Override
+	/*@Override
 	public void DepthFirstSearch(int source) {
 		time = 0;
 		Node origin = nodes.stream().filter(n -> n.data == source).findFirst().get();
 		dfsVisit(origin);
 
-		List<Node> notVisitedNodes = nodes.stream().filter(n -> n.getColor() == Color.WHITE)
-				.collect(Collectors.toList());
-		for (Node n : notVisitedNodes) {
+		for (Node n : nodes) {
 			if (n.getColor() == Color.WHITE) {
 				dfsVisit(n);
 			}
@@ -153,6 +133,67 @@ public class GraphList implements Graph {
 		u.setColor(Color.BLACK);
 		time++;
 		u.setCloseTime(time);
+	}*/
+
+	@Override
+	public void DepthFirstSearch(int origin) {
+		Node source = nodes.stream().filter(n -> n.data == origin).findFirst().get();
+
+		initVertices(source);
+
+		HashMap<Integer, Iterator<Node>> iterMap = new HashMap<>();
+
+		// add iterators into a hashmap with label of each vertex as key
+		for (Node node : nodes) {
+			iterMap.put(node.data, node.neighbours.iterator());
+		}
+
+		Stack<Node> stack = new Stack<>();
+
+		time = time + 1;
+		source.setColor(Color.GREY);
+		source.setOpenTime(time);
+		stack.push(source);
+
+		while (!stack.isEmpty()) {
+
+			Node peek = stack.peek();
+
+			// get the iterator of peek so that iterator will continue
+			// from its last position.
+			Iterator<Node> iterator = iterMap.get(peek.data);
+
+			if (iterator.hasNext()) {
+
+				Node adjVertex = iterator.next();
+
+				if (adjVertex.getColor() != Color.WHITE) {
+					time = time + 1;
+					adjVertex.setOpenTime(time);
+					adjVertex.setColor(Color.GREY);
+					stack.push(adjVertex);
+				}
+			} else {
+				time = time + 1;
+				peek.setCloseTime(time);
+				stack.pop();
+			}
+		}
+		printTree(fileNameOut.replace(".txt", "BFS.txt"));
+	}
+
+	/**
+	 * Make all vertices undiscovered
+	 * 
+	 * @param graph
+	 */
+	private void initVertices(Node source) {
+
+		for (Node node : nodes) {
+
+			if (node != source)
+				node.setColor(Color.WHITE);
+		}
 	}
 
 	private void printTree(String fileName) {
@@ -169,7 +210,7 @@ public class GraphList implements Graph {
 
 	@Override
 	public void BreadthFirstSearch(int source) {
-		q = new PriorityQueue<Node>();
+		Queue<Node> q = new PriorityQueue<Node>();
 		Node origin = nodes.stream().filter(n -> n.data == source).findFirst().get();
 		q.add(origin);
 
@@ -181,7 +222,6 @@ public class GraphList implements Graph {
 					n.setColor(Color.GREY);
 					n.setFather(u);
 					n.setLevel(u.getLevel() + 1);
-					// n.distance = u.distance + 1;
 				}
 
 			}
@@ -190,23 +230,13 @@ public class GraphList implements Graph {
 		printTree(fileNameOut.replace(".txt", "BFS.txt"));
 	}
 
-	@Override
-	public void printToFile() {
-		printToFile(toString(), fileNameOut);
-	}
-
-	private void printToFile(String text, String fileName) {
-		try {
-			File file = new File(fileName);
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-
-			PrintWriter out = new PrintWriter(file);
-			out.println(text);
-			out.close();
-		} catch (Exception e) {
-			System.out.println("Something went wrong: " + e.getMessage());
+	private static int getIndex(Set<? extends Object> set, Object value) {
+		int result = 0;
+		for (Object entry : set) {
+			if (entry.equals(value))
+				return result;
+			result++;
 		}
+		return -1;
 	}
 }
