@@ -3,25 +3,31 @@ package parte1;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
-public class GraphMatrix extends Graph {
-	private LinkedList<LinkedList<Integer>> matrix;
-	private Map<Node, Integer> nodeMap;
+public class GraphMatrixPrimitive extends Graph {
+	private int[][] matrix;
+	private Map<Integer,Node> nodeMap;
 	private int vertexCount;
 	private int time;
 
-	public GraphMatrix(String fileNameIn, String fileNameOut) {
+	public GraphMatrixPrimitive(String fileNameIn, String fileNameOut) {
 		super(fileNameIn, fileNameOut);
 	}
 
 	@Override
 	void init() {
-		matrix = new LinkedList<LinkedList<Integer>>();
-		nodeMap = new HashMap<Node, Integer>();
+		nodeMap = new LinkedHashMap<Integer, Node>();
 	}
 
 	@Override
@@ -33,10 +39,9 @@ public class GraphMatrix extends Graph {
 			String linha = buffReader.readLine();
 
 			vertexCount = Integer.parseInt(linha);
-			// initMatrix(vertexCount);
+			matrix = new int[vertexCount][vertexCount];
 
 			int iteration = 0;
-			int countIndex = 0;
 
 			linha = buffReader.readLine();
 			while (linha != null) {
@@ -49,39 +54,15 @@ public class GraphMatrix extends Graph {
 				Node node1 = new Node(vertex1);
 				Node node2 = new Node(vertex2);
 
-				if (!nodeMap.containsKey(node1)) {
-					nodeMap.put(node1, countIndex++);
-				}
-
-				if (!node1.equals(node2) && !nodeMap.containsKey(node2)) {
-					nodeMap.put(node2, countIndex++);
-				}
-
-				int indexNode1 = nodeMap.get(node1);
-				int indexNode2 = nodeMap.get(node2);
-
-				// System.out.println(String.format("x: %d y: %d", indexNode1, indexNode2));
-
-				int higherIndex = Math.max(indexNode1, indexNode2);
-
-				int toBeAdded = (higherIndex + 1) - matrix.size();
-
-				for (int i = 0; i < toBeAdded; i++) {
-					matrix.add(new LinkedList<Integer>());
-				}
-				
-				for (int i = 0; i < matrix.size(); i++) {
-					while (matrix.get(i).size() <= higherIndex) {
-						matrix.get(i).add(0);
-					}
-				}
-
-				Integer edges = matrix.get(indexNode1).get(indexNode2);
-				matrix.get(indexNode1).set(indexNode2, edges + 1);
-				matrix.get(indexNode2).set(indexNode1, edges + 1);
-
 				node1.setDegree(node1.getDegree()+1);
 				node2.setDegree(node2.getDegree()+1);
+
+				nodeMap.put(vertex1-1, node1);
+				nodeMap.put(vertex2-1, node2);
+				
+				int edges = matrix[vertex1-1][vertex2-1];
+				matrix[vertex1-1][vertex2-1] = edges + 1;
+				matrix[vertex2-1][vertex1-1] = edges + 1;
 
 				edgeCount++;
 				linha = buffReader.readLine();
@@ -93,28 +74,19 @@ public class GraphMatrix extends Graph {
 		}
 	}
 
-	private void initMatrix(int verticeCount) {
-		System.out.println("init matrix...");
-		for (int i = 0; i < verticeCount; i++) {
-			LinkedList<Integer> list = new LinkedList<Integer>();
-			for (int j = 0; j < verticeCount; j++) {
-				list.add(0);
-			}
-			matrix.add(list);
-		}
-		System.out.println("done init matrix...");
-	}
-
 	@Override
 	public List<Integer> getDegreeSequence() {
 		List<Integer> degreeSequence = new LinkedList<Integer>();
 		for (int i = 0; i < vertexCount; i++) {
 			degreeSequence.add(0);
 		}
-		for (int i = 0; i < matrix.size(); i++) {
-			LinkedList<Integer> row = matrix.get(i);
-			int degree = row.stream().mapToInt(e -> e).sum();
-			degreeSequence.set(i, degree);
+		for (int i = 0; i < matrix.length; i++) {
+			int[] row = matrix[i];
+			int sum = 0;
+			for (int j : row) {
+				sum+= j;
+			}
+			degreeSequence.set(i, sum);
 		}
 		return degreeSequence.stream().sorted().collect(Collectors.toList());
 	}
@@ -130,19 +102,19 @@ public class GraphMatrix extends Graph {
 
 	@Override
 	public int getVertexCount() {
-		return nodeMap.keySet().size();
+		return vertexCount;
 	}
 
 	@Override
 	public void DepthFirstSearch(int origin) {
-		/*Node source = nodeMap.keySet().stream().filter(n -> n.data == origin).findFirst().get();
+		Node source = nodeMap.values().stream().filter(n -> n.getData() == origin).findFirst().get();
 		int[] colorArray = new int[vertexCount];
 
 		HashMap<Integer, Iterator<Node>> iterMap = new HashMap<>();
 
 		// add iterators into a hashmap with label of each vertex as key
-		for (Node node : nodes) {
-			iterMap.put(node.data, node.neighbours.iterator());
+		for (Node node : nodeMap.values()) {
+			iterMap.put(node.getData(), getNeighbours(node).iterator());
 		}
 
 		Stack<Node> stack = new Stack<>();
@@ -158,7 +130,7 @@ public class GraphMatrix extends Graph {
 
 			// get the iterator of peek so that iterator will continue
 			// from its last position.
-			Iterator<Node> iterator = iterMap.get(peek.data);
+			Iterator<Node> iterator = iterMap.get(peek.getData());
 
 			if (iterator.hasNext()) {
 
@@ -176,12 +148,54 @@ public class GraphMatrix extends Graph {
 				stack.pop();
 			}
 		}
-		printTree(fileNameOut.replace(".txt", "BFS.txt"));*/
+		printTree(fileNameOut.replace(".txt", "BFS.txt"));
+	}
+
+	private void printTree(String fileName) {
+		StringBuilder b = new StringBuilder();
+		nodeMap.values().forEach(n -> {
+			String txt = String.format("vertex: %d, father: %d, level: %d \n", n.getData(),
+					n.getFather() != null ? n.getFather().getData(): null, n.getLevel());
+			System.out.print(txt);
+			b.append(txt);
+		});
+
+		printToFile(b.toString(), fileName);
+	}
+
+	private Set<Node> getNeighbours(Node node) {
+		Set<Node> neighbours = new LinkedHashSet<>();
+		
+		for (int i = 0; i < matrix[node.getData()-1].length; i++) {
+			if (matrix[node.getData()-1][i] > 0) {
+				neighbours.add(nodeMap.get(i));
+			}
+		}
+		
+		
+		return neighbours;
 	}
 
 	@Override
 	public void BreadthFirstSearch(int source) {
-		// TODO Auto-generated method stub
+		Queue<Node> q = new PriorityQueue<Node>();
+		Node origin = nodeMap.values().stream().filter(n -> n.getData() == source).findFirst().get();
+		q.add(origin);
+
+		while (!q.isEmpty()) {
+			Node u = q.poll();
+			for (Node n : u.getNeighbours()) {
+				if (n.getColor() == Color.WHITE) {
+					q.add(n);
+					n.setColor(Color.GREY);
+					n.setFather(u);
+					n.setLevel(u.getLevel() + 1);
+				}
+
+			}
+			u.setColor(Color.BLACK);
+		}
+		printTree(fileNameOut.replace(".txt", "BFS.txt"));
 
 	}
 

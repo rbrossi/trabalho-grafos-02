@@ -48,7 +48,7 @@ public class GraphList extends Graph {
 				Node node1 = new Node(vertex1);
 				Node node2 = null;
 				node1 = nodes.addNode(node1);
-				node1.degree++;
+				node1.setDegree(node1.getDegree()+1);
 
 				if (vertex1 != vertex2) {
 					node2 = new Node(vertex2);
@@ -59,7 +59,7 @@ public class GraphList extends Graph {
 					node2 = node1;
 					node1.addNeighbour(node2);
 				}
-				node2.degree++;
+				node2.setDegree(node2.getDegree()+1);
 
 				// System.out.println(Arrays.toString(nodes.toArray()));
 				// matrix[getIndex(nodes, node1)][getIndex(nodes, node2)]++;
@@ -79,7 +79,7 @@ public class GraphList extends Graph {
 
 	@Override
 	public List<Integer> getDegreeSequence() {
-		return nodes.stream().map(n -> n.degree).sorted().collect(Collectors.toList());
+		return nodes.stream().map(n -> n.getDegree()).sorted().collect(Collectors.toList());
 	}
 
 	@Override
@@ -92,8 +92,8 @@ public class GraphList extends Graph {
 		StringBuilder b = new StringBuilder();
 		nodes.stream().forEach(n -> {
 			b.append("\n" + n.toString());
-			n.neighbours.stream().forEach(h -> {
-				b.append(" -> " + h.data);
+			n.getNeighbours().stream().forEach(h -> {
+				b.append(" -> " + h.getData());
 			});
 		});
 		System.out.println(b.toString());
@@ -137,7 +137,7 @@ public class GraphList extends Graph {
 
 	@Override
 	public void DepthFirstSearch(int origin) {
-		Node source = nodes.stream().filter(n -> n.data == origin).findFirst().get();
+		Node source = nodes.stream().filter(n -> n.getData() == origin).findFirst().get();
 
 		initVertices(source);
 
@@ -145,7 +145,7 @@ public class GraphList extends Graph {
 
 		// add iterators into a hashmap with label of each vertex as key
 		for (Node node : nodes) {
-			iterMap.put(node.data, node.neighbours.iterator());
+			iterMap.put(node.getData(), node.getNeighbours().iterator());
 		}
 
 		Stack<Node> stack = new Stack<>();
@@ -161,7 +161,7 @@ public class GraphList extends Graph {
 
 			// get the iterator of peek so that iterator will continue
 			// from its last position.
-			Iterator<Node> iterator = iterMap.get(peek.data);
+			Iterator<Node> iterator = iterMap.get(peek.getData());
 
 			if (iterator.hasNext()) {
 
@@ -199,8 +199,8 @@ public class GraphList extends Graph {
 	private void printTree(String fileName) {
 		StringBuilder b = new StringBuilder();
 		nodes.forEach(n -> {
-			String txt = String.format("vertex: %d, father: %d, level: %d \n", n.data,
-					n.father != null ? n.father.data : null, n.level);
+			String txt = String.format("vertex: %d, father: %d, level: %d \n", n.getData(),
+					n.getFather() != null ? n.getFather().getData(): null, n.getLevel());
 			System.out.print(txt);
 			b.append(txt);
 		});
@@ -211,12 +211,12 @@ public class GraphList extends Graph {
 	@Override
 	public void BreadthFirstSearch(int source) {
 		Queue<Node> q = new PriorityQueue<Node>();
-		Node origin = nodes.stream().filter(n -> n.data == source).findFirst().get();
+		Node origin = nodes.stream().filter(n -> n.getData() == source).findFirst().get();
 		q.add(origin);
 
 		while (!q.isEmpty()) {
 			Node u = q.poll();
-			for (Node n : u.neighbours) {
+			for (Node n : u.getNeighbours()) {
 				if (n.getColor() == Color.WHITE) {
 					q.add(n);
 					n.setColor(Color.GREY);

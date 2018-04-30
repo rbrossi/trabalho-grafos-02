@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Node implements Comparable<Node> {
-	int data;
-	Color color;
-	List<Node> neighbours;
-	int degree;
-	int openTime;
-	int closeTime;
-	Node father;
-	int level;
-	//int distance;
+	private int data;
+	private Color color;
+	private List<Node> neighbours;
+	private int degree;
+	private int openTime;
+	private int closeTime;
+	private Node father;
+	private int level;
 	
 	Node(int data) {
 		this.data = data;
@@ -23,7 +22,6 @@ class Node implements Comparable<Node> {
 		this.color = Color.WHITE;
 		this.father = null;
 		this.level = 0;
-		//this.distance = 0;
 	}
 
 	public void addneighbours(Node neighbourNode) {
